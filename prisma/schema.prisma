@@ -1,0 +1,55 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String       @id @default(cuid())
+  email         String       @unique
+  privyId       String       @unique
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  onboarding    Onboarding?
+  groceryItems  GroceryItem[]
+}
+
+model Onboarding {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  completed     Boolean  @default(false)
+  householdType String?
+  householdMembers Int?
+  goals         String[] // Array of goal strings
+  diet          String?
+  ingredients   String[] // Array of ingredient preference strings
+  monthlyBudget String?
+  weeklyBudget  String?
+  dataSources   Json?    // Store dataSources object
+  storageMode   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model GroceryItem {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  quantity    String?
+  daysLeft    Int?
+  status      String   @default("ok") // ok, low, out
+  health      String   @default("clean") // clean, flagged
+  category    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+}

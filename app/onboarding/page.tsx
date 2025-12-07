@@ -1,15 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { usePrivy } from '@privy-io/react-auth';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Chip } from '@/components/ui/Chip';
 import { Input } from '@/components/ui/Input';
 import { Toggle } from '@/components/ui/Toggle';
+import { useApi } from '@/lib/api';
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const { ready, authenticated, login } = usePrivy();
+  const { fetchWithAuth } = useApi();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [step, setStep] = useState(1);
   const [household, setHousehold] = useState({ type: '', members: 1, names: [] });
   const [goals, setGoals] = useState<string[]>([]);
@@ -19,6 +25,50 @@ export default function OnboardingPage() {
   const [dataSources, setDataSources] = useState({ receipts: false, email: false, amazon: false, walmart: false });
   const [storageMode, setStorageMode] = useState('local');
 
+  useEffect(() => {
+    if (!ready) return;
+
+    if (!authenticated) {
+      login();
+      return;
+    }
+
+    // Check if onboarding is already completed
+    const checkOnboarding = async () => {
+      try {
+        const response = await fetchWithAuth('/api/onboarding');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.completed) {
+            router.push('/home');
+            return;
+          }
+          // Load existing data if any
+          if (data.householdType) {
+            setHousehold(prev => ({
+              ...prev,
+              type: data.householdType || '',
+              members: data.householdMembers || 1,
+            }));
+          }
+          if (data.goals) setGoals(data.goals);
+          if (data.diet) setDiet(data.diet);
+          if (data.ingredients) setIngredients(data.ingredients);
+          if (data.monthlyBudget) setBudget(prev => ({ ...prev, monthly: data.monthlyBudget }));
+          if (data.weeklyBudget) setBudget(prev => ({ ...prev, weekly: data.weeklyBudget }));
+          if (data.dataSources) setDataSources(data.dataSources);
+          if (data.storageMode) setStorageMode(data.storageMode);
+        }
+      } catch (error) {
+        console.error('Error checking onboarding:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkOnboarding();
+  }, [ready, authenticated, router, login, fetchWithAuth]);
+
   const toggleGoal = (goal: string) => {
     setGoals(prev => prev.includes(goal) ? prev.filter(g => g !== goal) : [...prev, goal]);
   };
@@ -27,13 +77,56 @@ export default function OnboardingPage() {
     setIngredients(prev => prev.includes(ing) ? prev.filter(i => i !== ing) : [...prev, ing]);
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step < 7) {
       setStep(step + 1);
     } else {
-      router.push('/home');
+      // Save onboarding data
+      setSaving(true);
+      try {
+        const response = await fetchWithAuth('/api/onboarding', {
+          method: 'POST',
+          body: JSON.stringify({
+            householdType: household.type,
+            householdMembers: household.members,
+            goals,
+            diet,
+            ingredients,
+            monthlyBudget: budget.monthly,
+            weeklyBudget: budget.weekly,
+            dataSources,
+            storageMode,
+            completed: true,
+          }),
+        });
+
+        if (response.ok) {
+          router.push('/home');
+        } else {
+          console.error('Failed to save onboarding data');
+        }
+      } catch (error) {
+        console.error('Error saving onboarding:', error);
+      } finally {
+        setSaving(false);
+      }
     }
   };
+
+  if (!ready || loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">🛒</div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!authenticated) {
+    return null; // Privy will handle the login modal
+  }
 
   const handleBack = () => {
     if (step > 1) {
@@ -291,8 +384,10 @@ export default function OnboardingPage() {
               </Button>
             </div>
             <div className="flex gap-3 pt-4">
-              <Button variant="outline" onClick={handleBack} className="flex-1">Back</Button>
-              <Button onClick={handleNext} className="flex-1">Complete setup</Button>
+              <Button variant="outline" onClick={handleBack} className="flex-1" disabled={saving}>Back</Button>
+              <Button onClick={handleNext} className="flex-1" disabled={saving}>
+                {saving ? 'Saving...' : 'Complete setup'}
+              </Button>
             </div>
           </div>
         )}
