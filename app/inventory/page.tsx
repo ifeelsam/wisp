@@ -22,7 +22,7 @@ interface GroceryItem {
 
 export default function InventoryPage() {
   const { ready, authenticated, login } = usePrivy();
-  const { fetchWithAuth } = useApi();
+  const { fetchWithAuth, user } = useApi();
   const [items, setItems] = useState<GroceryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -39,8 +39,11 @@ export default function InventoryPage() {
       return;
     }
 
+    // Wait for user to be available
+    if (!user) return;
+
     loadGroceries();
-  }, [ready, authenticated, login]);
+  }, [ready, authenticated, user, login]);
 
   const loadGroceries = async () => {
     try {

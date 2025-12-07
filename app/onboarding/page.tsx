@@ -13,7 +13,7 @@ import { useApi } from '@/lib/api';
 export default function OnboardingPage() {
   const router = useRouter();
   const { ready, authenticated, login } = usePrivy();
-  const { fetchWithAuth } = useApi();
+  const { fetchWithAuth, user } = useApi();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [step, setStep] = useState(1);
@@ -32,6 +32,9 @@ export default function OnboardingPage() {
       login();
       return;
     }
+
+    // Wait for user to be available
+    if (!user) return;
 
     // Check if onboarding is already completed
     const checkOnboarding = async () => {
@@ -59,15 +62,15 @@ export default function OnboardingPage() {
           if (data.dataSources) setDataSources(data.dataSources);
           if (data.storageMode) setStorageMode(data.storageMode);
         }
-      } catch (error) {
-        console.error('Error checking onboarding:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    } catch (error) {
+      console.error('Error checking onboarding:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    checkOnboarding();
-  }, [ready, authenticated, router, login, fetchWithAuth]);
+  checkOnboarding();
+  }, [ready, authenticated, user, router, login, fetchWithAuth]);
 
   const toggleGoal = (goal: string) => {
     setGoals(prev => prev.includes(goal) ? prev.filter(g => g !== goal) : [...prev, goal]);

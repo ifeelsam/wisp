@@ -8,7 +8,7 @@ import { useApi } from '@/lib/api';
 export default function Home() {
   const router = useRouter();
   const { ready, authenticated, login } = usePrivy();
-  const { fetchWithAuth } = useApi();
+  const { fetchWithAuth, user } = useApi();
 
   useEffect(() => {
     if (!ready) return;
@@ -18,6 +18,9 @@ export default function Home() {
         login();
         return;
       }
+
+      // Wait for user to be available
+      if (!user) return;
 
       // Check if onboarding is completed
       try {
@@ -39,7 +42,7 @@ export default function Home() {
     };
 
     checkAndRedirect();
-  }, [ready, authenticated, router, login, fetchWithAuth]);
+  }, [ready, authenticated, user, router, login, fetchWithAuth]);
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center">
