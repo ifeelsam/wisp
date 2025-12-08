@@ -184,6 +184,7 @@ export type UserWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   onboarding?: Prisma.XOR<Prisma.OnboardingNullableScalarRelationFilter, Prisma.OnboardingWhereInput> | null
   groceryItems?: Prisma.GroceryItemListRelationFilter
+  receipts?: Prisma.ReceiptListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -194,6 +195,7 @@ export type UserOrderByWithRelationInput = {
   updatedAt?: Prisma.SortOrder
   onboarding?: Prisma.OnboardingOrderByWithRelationInput
   groceryItems?: Prisma.GroceryItemOrderByRelationAggregateInput
+  receipts?: Prisma.ReceiptOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -207,6 +209,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   onboarding?: Prisma.XOR<Prisma.OnboardingNullableScalarRelationFilter, Prisma.OnboardingWhereInput> | null
   groceryItems?: Prisma.GroceryItemListRelationFilter
+  receipts?: Prisma.ReceiptListRelationFilter
 }, "id" | "email" | "privyId">
 
 export type UserOrderByWithAggregationInput = {
@@ -239,6 +242,7 @@ export type UserCreateInput = {
   updatedAt?: Date | string
   onboarding?: Prisma.OnboardingCreateNestedOneWithoutUserInput
   groceryItems?: Prisma.GroceryItemCreateNestedManyWithoutUserInput
+  receipts?: Prisma.ReceiptCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -249,6 +253,7 @@ export type UserUncheckedCreateInput = {
   updatedAt?: Date | string
   onboarding?: Prisma.OnboardingUncheckedCreateNestedOneWithoutUserInput
   groceryItems?: Prisma.GroceryItemUncheckedCreateNestedManyWithoutUserInput
+  receipts?: Prisma.ReceiptUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -259,6 +264,7 @@ export type UserUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   onboarding?: Prisma.OnboardingUpdateOneWithoutUserNestedInput
   groceryItems?: Prisma.GroceryItemUpdateManyWithoutUserNestedInput
+  receipts?: Prisma.ReceiptUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -269,6 +275,7 @@ export type UserUncheckedUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   onboarding?: Prisma.OnboardingUncheckedUpdateOneWithoutUserNestedInput
   groceryItems?: Prisma.GroceryItemUncheckedUpdateManyWithoutUserNestedInput
+  receipts?: Prisma.ReceiptUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -360,6 +367,20 @@ export type UserUpdateOneRequiredWithoutGroceryItemsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutGroceryItemsInput, Prisma.UserUpdateWithoutGroceryItemsInput>, Prisma.UserUncheckedUpdateWithoutGroceryItemsInput>
 }
 
+export type UserCreateNestedOneWithoutReceiptsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutReceiptsInput, Prisma.UserUncheckedCreateWithoutReceiptsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutReceiptsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutReceiptsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutReceiptsInput, Prisma.UserUncheckedCreateWithoutReceiptsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutReceiptsInput
+  upsert?: Prisma.UserUpsertWithoutReceiptsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutReceiptsInput, Prisma.UserUpdateWithoutReceiptsInput>, Prisma.UserUncheckedUpdateWithoutReceiptsInput>
+}
+
 export type UserCreateWithoutOnboardingInput = {
   id?: string
   email: string
@@ -367,6 +388,7 @@ export type UserCreateWithoutOnboardingInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   groceryItems?: Prisma.GroceryItemCreateNestedManyWithoutUserInput
+  receipts?: Prisma.ReceiptCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutOnboardingInput = {
@@ -376,6 +398,7 @@ export type UserUncheckedCreateWithoutOnboardingInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   groceryItems?: Prisma.GroceryItemUncheckedCreateNestedManyWithoutUserInput
+  receipts?: Prisma.ReceiptUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutOnboardingInput = {
@@ -401,6 +424,7 @@ export type UserUpdateWithoutOnboardingInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   groceryItems?: Prisma.GroceryItemUpdateManyWithoutUserNestedInput
+  receipts?: Prisma.ReceiptUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOnboardingInput = {
@@ -410,6 +434,7 @@ export type UserUncheckedUpdateWithoutOnboardingInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   groceryItems?: Prisma.GroceryItemUncheckedUpdateManyWithoutUserNestedInput
+  receipts?: Prisma.ReceiptUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutGroceryItemsInput = {
@@ -419,6 +444,7 @@ export type UserCreateWithoutGroceryItemsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   onboarding?: Prisma.OnboardingCreateNestedOneWithoutUserInput
+  receipts?: Prisma.ReceiptCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutGroceryItemsInput = {
@@ -428,6 +454,7 @@ export type UserUncheckedCreateWithoutGroceryItemsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   onboarding?: Prisma.OnboardingUncheckedCreateNestedOneWithoutUserInput
+  receipts?: Prisma.ReceiptUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutGroceryItemsInput = {
@@ -453,6 +480,7 @@ export type UserUpdateWithoutGroceryItemsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   onboarding?: Prisma.OnboardingUpdateOneWithoutUserNestedInput
+  receipts?: Prisma.ReceiptUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutGroceryItemsInput = {
@@ -462,6 +490,63 @@ export type UserUncheckedUpdateWithoutGroceryItemsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   onboarding?: Prisma.OnboardingUncheckedUpdateOneWithoutUserNestedInput
+  receipts?: Prisma.ReceiptUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutReceiptsInput = {
+  id?: string
+  email: string
+  privyId: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  onboarding?: Prisma.OnboardingCreateNestedOneWithoutUserInput
+  groceryItems?: Prisma.GroceryItemCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutReceiptsInput = {
+  id?: string
+  email: string
+  privyId: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  onboarding?: Prisma.OnboardingUncheckedCreateNestedOneWithoutUserInput
+  groceryItems?: Prisma.GroceryItemUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutReceiptsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutReceiptsInput, Prisma.UserUncheckedCreateWithoutReceiptsInput>
+}
+
+export type UserUpsertWithoutReceiptsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutReceiptsInput, Prisma.UserUncheckedUpdateWithoutReceiptsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutReceiptsInput, Prisma.UserUncheckedCreateWithoutReceiptsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutReceiptsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutReceiptsInput, Prisma.UserUncheckedUpdateWithoutReceiptsInput>
+}
+
+export type UserUpdateWithoutReceiptsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  privyId?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  onboarding?: Prisma.OnboardingUpdateOneWithoutUserNestedInput
+  groceryItems?: Prisma.GroceryItemUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutReceiptsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  privyId?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  onboarding?: Prisma.OnboardingUncheckedUpdateOneWithoutUserNestedInput
+  groceryItems?: Prisma.GroceryItemUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -471,10 +556,12 @@ export type UserUncheckedUpdateWithoutGroceryItemsInput = {
 
 export type UserCountOutputType = {
   groceryItems: number
+  receipts: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   groceryItems?: boolean | UserCountOutputTypeCountGroceryItemsArgs
+  receipts?: boolean | UserCountOutputTypeCountReceiptsArgs
 }
 
 /**
@@ -494,6 +581,13 @@ export type UserCountOutputTypeCountGroceryItemsArgs<ExtArgs extends runtime.Typ
   where?: Prisma.GroceryItemWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountReceiptsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ReceiptWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -503,6 +597,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   updatedAt?: boolean
   onboarding?: boolean | Prisma.User$onboardingArgs<ExtArgs>
   groceryItems?: boolean | Prisma.User$groceryItemsArgs<ExtArgs>
+  receipts?: boolean | Prisma.User$receiptsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -534,6 +629,7 @@ export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = run
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   onboarding?: boolean | Prisma.User$onboardingArgs<ExtArgs>
   groceryItems?: boolean | Prisma.User$groceryItemsArgs<ExtArgs>
+  receipts?: boolean | Prisma.User$receiptsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -544,6 +640,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   objects: {
     onboarding: Prisma.$OnboardingPayload<ExtArgs> | null
     groceryItems: Prisma.$GroceryItemPayload<ExtArgs>[]
+    receipts: Prisma.$ReceiptPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -947,6 +1044,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   readonly [Symbol.toStringTag]: "PrismaPromise"
   onboarding<T extends Prisma.User$onboardingArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$onboardingArgs<ExtArgs>>): Prisma.Prisma__OnboardingClient<runtime.Types.Result.GetResult<Prisma.$OnboardingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   groceryItems<T extends Prisma.User$groceryItemsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$groceryItemsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$GroceryItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  receipts<T extends Prisma.User$receiptsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$receiptsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ReceiptPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1409,6 +1507,30 @@ export type User$groceryItemsArgs<ExtArgs extends runtime.Types.Extensions.Inter
   take?: number
   skip?: number
   distinct?: Prisma.GroceryItemScalarFieldEnum | Prisma.GroceryItemScalarFieldEnum[]
+}
+
+/**
+ * User.receipts
+ */
+export type User$receiptsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Receipt
+   */
+  select?: Prisma.ReceiptSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Receipt
+   */
+  omit?: Prisma.ReceiptOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ReceiptInclude<ExtArgs> | null
+  where?: Prisma.ReceiptWhereInput
+  orderBy?: Prisma.ReceiptOrderByWithRelationInput | Prisma.ReceiptOrderByWithRelationInput[]
+  cursor?: Prisma.ReceiptWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ReceiptScalarFieldEnum | Prisma.ReceiptScalarFieldEnum[]
 }
 
 /**

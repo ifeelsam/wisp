@@ -53,7 +53,9 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   User: 'User',
   Onboarding: 'Onboarding',
-  GroceryItem: 'GroceryItem'
+  GroceryItem: 'GroceryItem',
+  Receipt: 'Receipt',
+  ReceiptItem: 'ReceiptItem'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -117,6 +119,34 @@ export const GroceryItemScalarFieldEnum = {
 } as const
 
 export type GroceryItemScalarFieldEnum = (typeof GroceryItemScalarFieldEnum)[keyof typeof GroceryItemScalarFieldEnum]
+
+
+export const ReceiptScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  imageUrl: 'imageUrl',
+  store: 'store',
+  date: 'date',
+  total: 'total',
+  processed: 'processed',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ReceiptScalarFieldEnum = (typeof ReceiptScalarFieldEnum)[keyof typeof ReceiptScalarFieldEnum]
+
+
+export const ReceiptItemScalarFieldEnum = {
+  id: 'id',
+  receiptId: 'receiptId',
+  name: 'name',
+  quantity: 'quantity',
+  price: 'price',
+  category: 'category',
+  createdAt: 'createdAt'
+} as const
+
+export type ReceiptItemScalarFieldEnum = (typeof ReceiptItemScalarFieldEnum)[keyof typeof ReceiptItemScalarFieldEnum]
 
 
 export const SortOrder = {

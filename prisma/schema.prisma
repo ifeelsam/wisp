@@ -18,6 +18,7 @@ model User {
   updatedAt     DateTime     @updatedAt
   onboarding    Onboarding?
   groceryItems  GroceryItem[]
+  receipts      Receipt[]
 }
 
 model Onboarding {
@@ -52,4 +53,33 @@ model GroceryItem {
   updatedAt   DateTime @updatedAt
 
   @@index([userId])
+}
+
+model Receipt {
+  id          String        @id @default(cuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  imageUrl    String?       // URL or path to stored image
+  store       String?
+  date        DateTime?
+  total       Float?
+  processed   Boolean       @default(false) // Whether items have been added to inventory
+  items       ReceiptItem[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([userId])
+}
+
+model ReceiptItem {
+  id          String   @id @default(cuid())
+  receiptId   String
+  receipt     Receipt  @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+  name        String
+  quantity    String?
+  price       Float?
+  category    String?
+  createdAt   DateTime @default(now())
+
+  @@index([receiptId])
 }

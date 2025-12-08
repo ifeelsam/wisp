@@ -32,3 +32,13 @@ export type Onboarding = Prisma.OnboardingModel
  * 
  */
 export type GroceryItem = Prisma.GroceryItemModel
+/**
+ * Model Receipt
+ * 
+ */
+export type Receipt = Prisma.ReceiptModel
+/**
+ * Model ReceiptItem
+ * 
+ */
+export type ReceiptItem = Prisma.ReceiptItemModel

@@ -5,13 +5,16 @@ import { usePrivy } from '@privy-io/react-auth';
 export function useApi() {
   const { user, getAccessToken, authenticated, ready } = usePrivy();
 
-  const getHeaders = async () => {
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-    };
+  const getHeaders = async (isFormData = false) => {
+    const headers: HeadersInit = {};
 
     if (!user || !authenticated) {
       throw new Error('User not authenticated');
+    }
+
+    // Don't set Content-Type for FormData - browser will set it with boundary
+    if (!isFormData) {
+      headers['Content-Type'] = 'application/json';
     }
 
     try {
@@ -43,7 +46,9 @@ export function useApi() {
       throw new Error('Not authenticated');
     }
 
-    const headers = await getHeaders();
+    const isFormData = options.body instanceof FormData;
+    const headers = await getHeaders(isFormData);
+    
     return fetch(url, {
       ...options,
       headers: {

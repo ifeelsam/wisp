@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 const navItems = [
   { href: '/home', label: 'Home', icon: '🏠' },
   { href: '/inventory', label: 'Pantry', icon: '📦' },
+  { href: '/receipts', label: 'Scan', icon: '📷' },
   { href: '/health', label: 'Health', icon: '💚' },
   { href: '/cart', label: 'Cart', icon: '🛒' },
   { href: '/budget', label: 'Budget', icon: '💰' },
@@ -19,7 +20,7 @@ export function Navigation() {
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
       <div className="flex justify-around items-center h-16 max-w-md mx-auto">
         {navItems.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
           return (
             <Link
               key={item.href}

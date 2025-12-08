@@ -11,4 +11,6 @@
 export type * from './models/User'
 export type * from './models/Onboarding'
 export type * from './models/GroceryItem'
+export type * from './models/Receipt'
+export type * from './models/ReceiptItem'
 export type * from './commonInputTypes'
