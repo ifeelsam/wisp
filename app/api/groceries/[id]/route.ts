@@ -15,7 +15,7 @@ async function getAuthUser(request: NextRequest) {
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getAuthUser(request);
@@ -23,8 +23,9 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id } = await params;
     const grocery = await prisma.groceryItem.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!grocery) {
@@ -39,7 +40,7 @@ export async function DELETE(
     }
 
     await prisma.groceryItem.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ success: true });
@@ -54,7 +55,7 @@ export async function DELETE(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getAuthUser(request);
@@ -62,8 +63,9 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id } = await params;
     const grocery = await prisma.groceryItem.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!grocery) {
@@ -81,7 +83,7 @@ export async function PATCH(
     const { name, quantity, daysLeft, status, health, category } = body;
 
     const updated = await prisma.groceryItem.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         ...(name && { name }),
         ...(quantity !== undefined && { quantity }),

@@ -3,7 +3,7 @@
 import { PrivyProvider as PrivyProviderBase } from '@privy-io/react-auth';
 
 export function PrivyProvider({ children }: { children: React.ReactNode }) {
-  const appId = "cmivh9plb00dnju0ch5srps0e";
+  const appId = "cm58j5nmx00vr52bsakztgq2r";
   
   if (!appId) {
     console.warn('NEXT_PUBLIC_PRIVY_APP_ID is not set. Please add it to your .env.local file.');
