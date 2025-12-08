@@ -31,10 +31,6 @@ const nextConfig: NextConfig = {
 
     return config;
   },
-  // Add empty turbopack config to silence the error when using webpack
-  experimental: {
-    turbo: {},
-  },
 };
 
 export default nextConfig;
