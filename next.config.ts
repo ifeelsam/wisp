@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
     'thread-stream',
     '@walletconnect/logger',
     'pino',
+    'tesseract.js',
   ],
   // Configure webpack to ignore test files and other non-essential files
   webpack: (config, { isServer }) => {

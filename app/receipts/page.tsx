@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { Navigation } from '@/components/Navigation';
 import { useApi } from '@/lib/api';
+import { parseReceiptText } from '@/lib/receipt-parser';
 
 interface ReceiptItem {
   name: string;
@@ -33,6 +34,8 @@ export default function ReceiptsPage() {
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);
   const [processing, setProcessing] = useState(false);
+  const [ocrProgress, setOcrProgress] = useState(0);
+  const [ocrStatus, setOcrStatus] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
   
@@ -137,10 +140,43 @@ export default function ReceiptsPage() {
   const processReceipt = async (file: File | Blob) => {
     setProcessing(true);
     setError(null);
+    setOcrProgress(0);
+    setOcrStatus('Initializing OCR...');
 
     try {
+      // Step 1: Perform OCR on the client side
+      // Dynamically import tesseract.js to avoid server-side bundling
+      setOcrStatus('Loading OCR engine...');
+      const { createWorker } = await import('tesseract.js');
+      const worker = await createWorker('eng');
+      
+      setOcrStatus('Processing image...');
+      const { data: { text } } = await worker.recognize(file, {
+        logger: (m: any) => {
+          if (m.status === 'recognizing text') {
+            const progress = Math.round(m.progress * 100);
+            setOcrProgress(progress);
+            setOcrStatus(`Recognizing text... ${progress}%`);
+          }
+        },
+      } as any);
+
+      await worker.terminate();
+      
+      setOcrStatus('Parsing receipt data...');
+      setOcrProgress(90);
+
+      // Step 2: Parse the OCR text to extract receipt data
+      const receiptData = parseReceiptText(text);
+
+      setOcrStatus('Saving receipt...');
+      setOcrProgress(95);
+
+      // Step 3: Send image and parsed data to server
       const formData = new FormData();
       formData.append('receipt', file);
+      formData.append('receiptData', JSON.stringify(receiptData));
+      formData.append('ocrText', text);
 
       const response = await fetchWithAuth('/api/receipts/scan', {
         method: 'POST',
@@ -149,17 +185,26 @@ export default function ReceiptsPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to process receipt');
+        throw new Error('Failed to save receipt');
       }
 
       const receipt = await response.json();
       setReceipts([receipt, ...receipts]);
       setSelectedReceipt(receipt);
+      setOcrProgress(100);
+      setOcrStatus('Complete!');
     } catch (err) {
       console.error('Error processing receipt:', err);
-      setError('Failed to process receipt. Please try again.');
+      setError(err instanceof Error ? err.message : 'Failed to process receipt. Please try again.');
+      setOcrStatus('');
+      setOcrProgress(0);
     } finally {
       setProcessing(false);
+      // Clear progress after a delay
+      setTimeout(() => {
+        setOcrProgress(0);
+        setOcrStatus('');
+      }, 2000);
     }
   };
 
@@ -281,7 +326,15 @@ export default function ReceiptsPage() {
           <Card className="mb-4">
             <div className="text-center py-8">
               <div className="text-4xl mb-2">⏳</div>
-              <p className="text-gray-600">Processing receipt...</p>
+              <p className="text-gray-600 mb-2">{ocrStatus || 'Processing receipt...'}</p>
+              {ocrProgress > 0 && (
+                <div className="w-full bg-gray-200 rounded-full h-2.5 mt-4">
+                  <div
+                    className="bg-[#EE7C2B] h-2.5 rounded-full transition-all duration-300"
+                    style={{ width: `${ocrProgress}%` }}
+                  />
+                </div>
+              )}
             </div>
           </Card>
         )}

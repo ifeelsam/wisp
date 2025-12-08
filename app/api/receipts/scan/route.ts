@@ -16,27 +16,6 @@ async function getAuthUser(request: NextRequest) {
   return await getOrCreateUser(privyId, email);
 }
 
-// Simple OCR simulation - in production, use a real OCR service like Tesseract.js or cloud API
-async function extractReceiptData(imageBuffer: Buffer): Promise<{
-  items: Array<{ name: string; quantity?: string; price?: number; category?: string }>;
-  store?: string;
-  date?: Date;
-  total?: number;
-}> {
-  // This is a placeholder - in production, you'd use actual OCR
-  // For now, return mock data to demonstrate the flow
-  return {
-    items: [
-      { name: 'Rolled Oats', quantity: '1', price: 4.99, category: 'Staples' },
-      { name: 'Whole Milk', quantity: '2L', price: 3.49, category: 'Dairy' },
-      { name: 'Bananas', quantity: '6', price: 2.99, category: 'Produce' },
-    ],
-    store: 'Whole Foods',
-    date: new Date(),
-    total: 11.47,
-  };
-}
-
 export async function POST(request: NextRequest) {
   try {
     const user = await getAuthUser(request);
@@ -71,8 +50,31 @@ export async function POST(request: NextRequest) {
 
     const imageUrl = `/uploads/receipts/${filename}`;
 
-    // Extract receipt data (OCR simulation)
-    const receiptData = await extractReceiptData(buffer);
+    // Get receipt data from form (already processed by client-side OCR)
+    const receiptDataJson = formData.get('receiptData') as string;
+    const ocrText = formData.get('ocrText') as string;
+
+    let receiptData: {
+      items: Array<{ name: string; quantity?: string; price?: number; category?: string }>;
+      store?: string;
+      date?: Date;
+      total?: number;
+    };
+
+    if (receiptDataJson) {
+      // Use client-provided parsed data
+      receiptData = JSON.parse(receiptDataJson);
+      // Convert date string back to Date object
+      if (receiptData.date && typeof receiptData.date === 'string') {
+        receiptData.date = new Date(receiptData.date);
+      }
+    } else {
+      // Fallback: return empty receipt if no data provided
+      receiptData = {
+        items: [],
+        date: new Date(),
+      };
+    }
 
     // Create receipt with items
     const receipt = await prisma.receipt.create({

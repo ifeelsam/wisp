@@ -15,10 +15,10 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] pb-20">
+    <div className="min-h-screen pb-20">
       <div className="max-w-md mx-auto px-4 py-6">
         {/* Top Summary Card */}
-        <Card className="bg-[#EE7C2B] text-white mb-6 border-0">
+        <div className="rounded-xl bg-[#EE7C2B] text-white mb-6 border-0 shadow-sm p-4">
           <div className="space-y-3">
             <div className="text-sm font-medium opacity-90">Pantry is stable</div>
             <div className="grid grid-cols-3 gap-4">
@@ -36,7 +36,7 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-        </Card>
+        </div>
 
         {/* Run-out Alerts */}
         <div className="mb-6">
@@ -66,7 +66,7 @@ export default function HomePage() {
               </div>
               <Chip variant="health">-20% processed</Chip>
             </div>
-            <div className="text-sm text-gray-700 bg-[#799B4B] bg-opacity-10 p-2 rounded">
+            <div className="text-sm text-white bg-[#799B4B] bg-opacity-10 p-2 rounded">
               This cart reduces ultra-processed snacks by 20% vs last order
             </div>
             <Link href="/cart">
