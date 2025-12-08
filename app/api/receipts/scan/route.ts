@@ -24,31 +24,32 @@ export async function POST(request: NextRequest) {
     }
 
     const formData = await request.formData();
-    const file = formData.get('receipt') as File;
-
-    if (!file) {
-      return NextResponse.json(
-        { error: 'No file provided' },
-        { status: 400 }
-      );
-    }
-
-    // Save image file
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
     
-    // Create uploads directory if it doesn't exist
-    const uploadsDir = join(process.cwd(), 'public', 'uploads', 'receipts');
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true });
+    // Optionally save image file (set SAVE_RECEIPT_IMAGES=true to enable)
+    // If disabled, we only store OCR text and parsed data - no images needed
+    const SAVE_IMAGES = process.env.SAVE_RECEIPT_IMAGES === 'true';
+    let imageUrl: string | undefined;
+
+    if (SAVE_IMAGES) {
+      const file = formData.get('receipt') as File;
+      if (file) {
+        const bytes = await file.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+        
+        // Create uploads directory if it doesn't exist
+        const uploadsDir = join(process.cwd(), 'public', 'uploads', 'receipts');
+        if (!existsSync(uploadsDir)) {
+          await mkdir(uploadsDir, { recursive: true });
+        }
+
+        // Generate unique filename
+        const filename = `${user.id}-${Date.now()}-${file.name}`;
+        const filepath = join(uploadsDir, filename);
+        await writeFile(filepath, buffer);
+
+        imageUrl = `/uploads/receipts/${filename}`;
+      }
     }
-
-    // Generate unique filename
-    const filename = `${user.id}-${Date.now()}-${file.name}`;
-    const filepath = join(uploadsDir, filename);
-    await writeFile(filepath, buffer);
-
-    const imageUrl = `/uploads/receipts/${filename}`;
 
     // Get receipt data from form (already processed by client-side OCR)
     const receiptDataJson = formData.get('receiptData') as string;

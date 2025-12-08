@@ -148,10 +148,7 @@ export default function ReceiptsPage() {
       // Dynamically import tesseract.js to avoid server-side bundling
       setOcrStatus('Loading OCR engine...');
       const { createWorker } = await import('tesseract.js');
-      const worker = await createWorker('eng');
-      
-      setOcrStatus('Processing image...');
-      const { data: { text } } = await worker.recognize(file, {
+      const worker = await createWorker('eng', 1, {
         logger: (m: any) => {
           if (m.status === 'recognizing text') {
             const progress = Math.round(m.progress * 100);
@@ -159,7 +156,10 @@ export default function ReceiptsPage() {
             setOcrStatus(`Recognizing text... ${progress}%`);
           }
         },
-      } as any);
+      });
+      
+      setOcrStatus('Processing image...');
+      const { data: { text } } = await worker.recognize(file);
 
       await worker.terminate();
       
@@ -172,8 +172,9 @@ export default function ReceiptsPage() {
       setOcrStatus('Saving receipt...');
       setOcrProgress(95);
 
-      // Step 3: Send image and parsed data to server
+      // Step 3: Send parsed data to server (image only if SAVE_RECEIPT_IMAGES is enabled)
       const formData = new FormData();
+      // Only send image if we're storing images (check env or always send, server will decide)
       formData.append('receipt', file);
       formData.append('receiptData', JSON.stringify(receiptData));
       formData.append('ocrText', text);

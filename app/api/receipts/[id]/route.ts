@@ -40,8 +40,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    // Delete image file if it exists
-    if (receipt.imageUrl) {
+    // Delete image file if it exists (only if images are being stored)
+    if (receipt.imageUrl && process.env.SAVE_RECEIPT_IMAGES === 'true') {
       try {
         const filepath = join(process.cwd(), 'public', receipt.imageUrl);
         await unlink(filepath);
