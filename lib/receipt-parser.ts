@@ -13,11 +13,24 @@ interface ParsedReceipt {
  * Parse OCR text to extract receipt information
  */
 export function parseReceiptText(ocrText: string): ParsedReceipt {
-  const lines = ocrText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+  // Clean up OCR text - remove extra whitespace, normalize
+  const cleanedText = ocrText
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .replace(/\n{3,}/g, '\n\n'); // Normalize multiple newlines
+  
+  const lines = cleanedText
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0);
   
   const result: ParsedReceipt = {
     items: [],
   };
+  
+  // Debug: log OCR text (helpful for troubleshooting)
+  console.log('OCR Text:', ocrText);
+  console.log('Parsed lines:', lines.length);
 
   // Common store name patterns (usually at the top)
   const storePatterns = [
@@ -31,24 +44,35 @@ export function parseReceiptText(ocrText: string): ParsedReceipt {
     /(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},?\s+\d{2,4}/i,
   ];
 
-  // Price patterns
-  const pricePattern = /(\d+\.\d{2})/;
-  const priceWithDollarPattern = /\$?\s*(\d+\.\d{2})/;
+  // Price patterns - handle both US (.) and European (,) decimal separators
+  // Also handle trailing characters like "8B", "B", "C", "¢C"
+  const pricePattern = /(\d+[.,]\d{1,3})/;
+  const priceWithDollarPattern = /[€$¢]?\s*(\d+[.,]\d{1,3})\s*[A-Z¢]*/i;
+  
+  // Helper to normalize price (convert comma to dot)
+  const normalizePrice = (priceStr: string): number => {
+    return parseFloat(priceStr.replace(',', '.'));
+  };
 
-  // Total patterns
+  // Total patterns - handle both . and , decimal separators
   const totalPatterns = [
-    /TOTAL[:\s]*\$?\s*(\d+\.\d{2})/i,
-    /AMOUNT[:\s]*\$?\s*(\d+\.\d{2})/i,
-    /SUBTOTAL[:\s]*\$?\s*(\d+\.\d{2})/i,
-    /^TOTAL\s+\$?\s*(\d+\.\d{2})/i,
+    /TOTAL[:\s]*[€$]?\s*(\d+[.,]\d{2,3})/i,
+    /AMOUNT[:\s]*[€$]?\s*(\d+[.,]\d{2,3})/i,
+    /SUBTOTAL[:\s]*[€$]?\s*(\d+[.,]\d{2,3})/i,
+    /^TOTAL\s+[€$]?\s*(\d+[.,]\d{2,3})/i,
   ];
 
   // Item line patterns (name, optional quantity, price)
+  // More flexible patterns to catch various receipt formats
+  // Handle both . and , as decimal separators
   const itemPatterns = [
-    /^(.+?)\s+(\d+\.\d{2})$/,
-    /^(.+?)\s+(\d+)\s+x\s+(\d+\.\d{2})/,
-    /^(.+?)\s+@\s+(\d+\.\d{2})/,
-    /^(.+?)\s+(\d+\.\d{2})\s*$/,
+    /^(.+?)\s+(\d+[.,]\d{2,3})$/m,                    // "Item Name 4.99" or "Item Name 4,99"
+    /^(.+?)\s+(\d+)\s+x\s+(\d+[.,]\d{2,3})/m,        // "Item Name 2 x 4.99"
+    /^(.+?)\s+@\s+(\d+[.,]\d{2,3})/m,                // "Item Name @ 4.99"
+    /^(.+?)\s+(\d+[.,]\d{2,3})\s*$/m,                // "Item Name 4.99 " (with trailing space)
+    /^(.+?)\s+[€$](\d+[.,]\d{2,3})$/m,               // "Item Name $4.99" or "Item Name €4,99"
+    /^(.+?)\s+(\d+)\s+(\d+[.,]\d{2,3})/m,            // "Item Name 2 4.99" (quantity without x)
+    /^(.+?)\s+(\d+[.,]\d{2,3})\s+(\d+[.,]\d{2,3})/m, // "Item Name 2.50 4.99" (unit price total)
   ];
 
   let foundStore = false;
@@ -94,7 +118,7 @@ export function parseReceiptText(ocrText: string): ParsedReceipt {
       for (const pattern of totalPatterns) {
         const match = line.match(pattern);
         if (match && match[1]) {
-          result.total = parseFloat(match[1]);
+          result.total = normalizePrice(match[1]);
           foundTotal = true;
           break;
         }
@@ -110,13 +134,18 @@ export function parseReceiptText(ocrText: string): ParsedReceipt {
         upperLine.includes('DESCRIPTION') ||
         upperLine.includes('PRICE') ||
         upperLine.includes('QTY') ||
-        upperLine.includes('TOTAL') ||
+        (upperLine.includes('TOTAL') && !upperLine.match(/^\d/)) || // Skip "TOTAL" but not lines starting with numbers
         upperLine.includes('SUBTOTAL') ||
-        upperLine.includes('TAX') ||
-        upperLine.includes('AMOUNT DUE')
+        (upperLine.includes('TAX') && !upperLine.match(/^\d/)) ||
+        upperLine.includes('AMOUNT DUE') ||
+        upperLine.includes('CASH') ||
+        upperLine.includes('CHANGE') ||
+        upperLine.includes('CARD')
       ) {
         continue;
       }
+
+      let itemAdded = false;
 
       // Try to match item patterns
       for (const pattern of itemPatterns) {
@@ -127,17 +156,20 @@ export function parseReceiptText(ocrText: string): ParsedReceipt {
           let quantity: string | undefined;
 
           // Skip if it looks like a total or tax line
-          if (itemName.toUpperCase().includes('TOTAL') || itemName.toUpperCase().includes('TAX')) {
+          if (itemName.toUpperCase().includes('TOTAL') || 
+              itemName.toUpperCase().includes('TAX') ||
+              itemName.toUpperCase().includes('SUBTOTAL') ||
+              itemName.length < 2) {
             continue;
           }
 
           if (match.length === 3) {
             // Pattern: name price
-            price = parseFloat(match[2]);
+            price = normalizePrice(match[2]);
           } else if (match.length === 4) {
             // Pattern: name quantity x price
             quantity = match[2];
-            price = parseFloat(match[3]);
+            price = normalizePrice(match[3]);
           }
 
           // Only add if we have a valid price
@@ -151,26 +183,60 @@ export function parseReceiptText(ocrText: string): ParsedReceipt {
               price: price,
               category: category,
             });
+            itemAdded = true;
           }
           break;
         }
       }
 
-      // Fallback: if line has a price at the end, treat as item
-      if (result.items.length === 0 || !line.match(pricePattern)) {
-        const priceMatch = line.match(priceWithDollarPattern);
-        if (priceMatch) {
-          const price = parseFloat(priceMatch[1]);
-          if (price && !isNaN(price) && price > 0 && price < 10000) {
-            const itemName = line.substring(0, priceMatch.index).trim();
-            if (itemName.length > 0 && itemName.length < 100) {
-              result.items.push({
-                name: itemName,
-                price: price,
-                category: inferCategory(itemName),
-              });
-            }
+      // Fallback: if line has a price at the end and we didn't already add it, treat as item
+      if (!itemAdded) {
+        // Try to find price anywhere in the line (not just at the end)
+        // Look for patterns like "ITEM NAME 1,99" or "ITEM NAME 1.99"
+        const priceMatch = line.match(/(.+?)\s+(\d+[.,]\d{1,3})\s*[A-Z¢€$]*$/i);
+        if (priceMatch && priceMatch.length >= 3) {
+          const itemName = priceMatch[1].trim();
+          const price = normalizePrice(priceMatch[2]);
+          
+          // Skip if it's clearly not an item
+          if (price && !isNaN(price) && price > 0 && price < 10000 &&
+              itemName.length > 1 && 
+              itemName.length < 100 &&
+              !itemName.toUpperCase().includes('TOTAL') &&
+              !itemName.toUpperCase().includes('TAX') &&
+              !itemName.toUpperCase().includes('SUBTOTAL') &&
+              !itemName.toUpperCase().includes('DINHEIRO') &&
+              !itemName.toUpperCase().includes('TROCO') &&
+              !itemName.toUpperCase().includes('CASH') &&
+              !itemName.toUpperCase().includes('CHANGE') &&
+              !itemName.toUpperCase().includes('CONTRIBUINTE') &&
+              !itemName.toUpperCase().includes('PRODUTOR') &&
+              !itemName.match(/^[\d\s\.,€$¢]+$/)) { // Skip lines that are just numbers/prices
+              
+            result.items.push({
+              name: itemName,
+              price: price,
+              category: inferCategory(itemName),
+            });
+            itemAdded = true;
           }
+        }
+      }
+      
+      // Handle multi-line items: if current line is just a price/quantity and previous line was an item
+      // This handles cases like:
+      // "TOMATE DE CACHO 0,808"
+      // "0,540 kg x 1,49 EUR/Kg"
+      if (!itemAdded && i > 0) {
+        const prevLine = lines[i - 1];
+        const prevLineHasPrice = prevLine.match(priceWithDollarPattern);
+        
+        // If previous line has a price and current line has quantity/unit info, 
+        // the item was already captured in previous iteration
+        // But if current line is just a price without item name, check if it's a continuation
+        if (prevLineHasPrice && line.match(/^\d+[.,]\d+\s*(kg|g|lb|oz|l|ml)/i)) {
+          // This is a quantity line, item was already captured
+          continue;
         }
       }
     }
@@ -185,6 +251,14 @@ export function parseReceiptText(ocrText: string): ParsedReceipt {
   if (!result.date) {
     result.date = new Date();
   }
+
+  // Debug: log parsed results
+  console.log('Parsed receipt:', {
+    store: result.store,
+    itemsCount: result.items.length,
+    items: result.items,
+    total: result.total,
+  });
 
   return result;
 }
