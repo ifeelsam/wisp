@@ -1,37 +1,78 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { use } from 'react';
 import Link from 'next/link';
+import { usePrivy } from '@privy-io/react-auth';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { Badge } from '@/components/ui/Badge';
 import { Toggle } from '@/components/ui/Toggle';
 import { Navigation } from '@/components/Navigation';
+import { useApi } from '@/lib/api';
 
 export default function ItemDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const item = {
-    name: 'Rolled Oats',
-    brand: 'Quaker',
-    category: 'Staples',
-    owner: 'Mostly you',
-    quantity: '1.2 kg',
-    servings: 6,
-    daysLeft: 3,
-    consumptionRate: 0.4,
-    nutrition: {
-      calories: 150,
-      protein: 5,
-      carbs: 27,
-      fat: 3,
-    },
-    flags: [
-      'No added sugar',
-      'Whole grain',
-    ],
-    concerns: [],
+  const { ready, authenticated, login } = usePrivy();
+  const { fetchWithAuth, user } = useApi();
+  const [loading, setLoading] = useState(true);
+  const [item, setItem] = useState<any>(null);
+
+  useEffect(() => {
+    if (!ready) return;
+
+    if (!authenticated) {
+      login();
+      return;
+    }
+
+    if (!user) return;
+
+    loadItem();
+  }, [ready, authenticated, user, id, login]);
+
+  const loadItem = async () => {
+    try {
+      const response = await fetchWithAuth(`/api/groceries/${id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setItem(data);
+      }
+    } catch (error) {
+      console.error('Error loading item:', error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (!ready || loading) {
+    return (
+      <div className="min-h-screen bg-[#F5F5F5] flex items-center justify-center pb-20">
+        <p className="text-gray-600">Loading...</p>
+      </div>
+    );
+  }
+
+  if (!authenticated) {
+    return null;
+  }
+
+  if (!item) {
+    return (
+      <div className="min-h-screen bg-[#F5F5F5] pb-20">
+        <div className="max-w-md mx-auto px-4 py-6">
+          <Link href="/inventory" className="text-[#EE7C2B] text-sm mb-4 inline-block">← Back to pantry</Link>
+          <Card>
+            <div className="text-center py-8 text-gray-500">
+              <p>Item not found</p>
+            </div>
+          </Card>
+        </div>
+        <Navigation />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F5F5F5] pb-20">
@@ -41,114 +82,58 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900 mb-1">{item.name}</h1>
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <span>{item.brand}</span>
-            <span>•</span>
-            <span>{item.category}</span>
-          </div>
-          <Chip variant="default" className="mt-2">{item.owner}</Chip>
+          {item.category && (
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <span>{item.category}</span>
+            </div>
+          )}
         </div>
 
         {/* Inventory & Forecast */}
         <Card className="mb-4">
           <h2 className="font-semibold text-gray-900 mb-3">Inventory & Forecast</h2>
           <div className="space-y-3">
-            <div>
-              <div className="text-sm text-gray-600">Current quantity</div>
-              <div className="text-lg font-semibold">{item.quantity} ({item.servings} servings)</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">Run-out estimate</div>
-              <div className="text-lg font-semibold text-[#EE7C2B]">Likely to run out in {item.daysLeft}-5 days</div>
-            </div>
-            <div className="pt-2 border-t">
-              <div className="text-sm text-gray-600 mb-2">Daily consumption rate</div>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.1"
-                value={item.consumptionRate}
-                className="w-full"
-              />
-              <div className="text-xs text-gray-500 mt-1">Adjust if you use this faster or slower</div>
-            </div>
-          </div>
-        </Card>
-
-        {/* Nutrition Overview */}
-        <Card className="mb-4">
-          <h2 className="font-semibold text-gray-900 mb-3">Nutrition (per serving)</h2>
-          <div className="grid grid-cols-4 gap-2 mb-3">
-            <div className="text-center">
-              <div className="text-lg font-semibold">{item.nutrition.calories}</div>
-              <div className="text-xs text-gray-600">Cal</div>
-            </div>
-            <div className="text-center">
-              <div className="text-lg font-semibold">{item.nutrition.protein}g</div>
-              <div className="text-xs text-gray-600">Protein</div>
-            </div>
-            <div className="text-center">
-              <div className="text-lg font-semibold">{item.nutrition.carbs}g</div>
-              <div className="text-xs text-gray-600">Carbs</div>
-            </div>
-            <div className="text-center">
-              <div className="text-lg font-semibold">{item.nutrition.fat}g</div>
-              <div className="text-xs text-gray-600">Fat</div>
-            </div>
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            <Badge variant="success">High fiber</Badge>
-            <Badge variant="success">Whole grain</Badge>
-          </div>
-        </Card>
-
-        {/* Hidden Ingredients */}
-        {item.concerns.length > 0 && (
-          <Card className="mb-4">
-            <h2 className="font-semibold text-gray-900 mb-3">Ingredient flags</h2>
-            <div className="space-y-2">
-              {item.concerns.map((concern, idx) => (
-                <div key={idx} className="flex items-center gap-2 text-sm">
-                  <span className="text-[#EE7C2B]">⚠️</span>
-                  <span>{concern}</span>
+            {item.quantity && (
+              <div>
+                <div className="text-sm text-gray-600">Current quantity</div>
+                <div className="text-lg font-semibold">{item.quantity}</div>
+              </div>
+            )}
+            {item.daysLeft !== null && (
+              <div>
+                <div className="text-sm text-gray-600">Run-out estimate</div>
+                <div className={`text-lg font-semibold ${item.daysLeft <= 3 ? 'text-[#EE7C2B]' : ''}`}>
+                  Likely to run out in {item.daysLeft} days
                 </div>
-              ))}
+              </div>
+            )}
+            <div>
+              <div className="text-sm text-gray-600 mb-2">Status</div>
+              <Chip variant={item.status === 'low' ? 'warning' : item.status === 'out' ? 'warning' : 'default'}>
+                {item.status === 'low' ? 'Running Low' : item.status === 'out' ? 'Out of Stock' : 'In Stock'}
+              </Chip>
             </div>
-          </Card>
-        )}
+          </div>
+        </Card>
 
-        {/* Healthier Alternatives */}
+        {/* Health Status */}
         <Card className="mb-4">
-          <Button variant="outline" className="w-full">
-            See cleaner alternatives
-          </Button>
+          <h2 className="font-semibold text-gray-900 mb-3">Health Status</h2>
+          <Chip variant={item.health === 'clean' ? 'health' : 'warning'}>
+            {item.health === 'clean' ? 'Clean' : 'Flagged'}
+          </Chip>
         </Card>
 
         {/* Actions */}
         <Card className="mb-4">
           <h2 className="font-semibold text-gray-900 mb-3">Actions</h2>
           <div className="space-y-3">
-            <Toggle
-              label="Pin as staple"
-              checked={false}
-              onChange={() => {}}
-              description="Always keep this item stocked"
-            />
-            <Toggle
-              label="Exclude from health metrics"
-              checked={false}
-              onChange={() => {}}
-              description="For occasional treats"
-            />
-            <div className="pt-2">
-              <div className="text-sm font-medium text-gray-700 mb-2">Track primarily for</div>
-              <select className="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                <option>All members</option>
-                <option>You</option>
-                <option>Partner</option>
-              </select>
-            </div>
+            <Button variant="outline" className="w-full">
+              Edit Item
+            </Button>
+            <Button variant="outline" className="w-full text-red-600 border-red-300 hover:bg-red-50">
+              Delete Item
+            </Button>
           </div>
         </Card>
       </div>
@@ -156,5 +141,3 @@ export default function ItemDetailPage({ params }: { params: Promise<{ id: strin
     </div>
   );
 }
-
-

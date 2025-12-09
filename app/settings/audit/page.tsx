@@ -1,55 +1,64 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePrivy } from '@privy-io/react-auth';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { Navigation } from '@/components/Navigation';
-
-const logEntries = [
-  {
-    id: 1,
-    timestamp: '2 hours ago',
-    type: 'cart',
-    description: 'Created draft cart on Amazon: 8 items, $45.20',
-    details: 'Items: Oats, Milk, Yogurt, Bananas, Bread, Eggs, Cheese, Apples',
-  },
-  {
-    id: 2,
-    timestamp: '1 day ago',
-    type: 'model',
-    description: 'Adjusted oats consumption estimate based on last 3 weeks',
-    details: 'Changed from 0.3kg/day to 0.4kg/day',
-  },
-  {
-    id: 3,
-    timestamp: '2 days ago',
-    type: 'substitution',
-    description: 'Suggested swap: Brand A cereal → Brand B cereal',
-    details: '-40% sugar, +$2.00 price difference',
-  },
-  {
-    id: 4,
-    timestamp: '3 days ago',
-    type: 'inventory',
-    description: 'Updated inventory: Added 2L milk from receipt scan',
-    details: 'Receipt from Whole Foods, scanned via camera',
-  },
-  {
-    id: 5,
-    timestamp: '5 days ago',
-    type: 'order',
-    description: 'Approved and placed order on Amazon',
-    details: '6 items, $38.50, delivered next day',
-  },
-];
+import { useApi } from '@/lib/api';
 
 const actionTypes = ['All', 'Inventory', 'Model', 'Cart', 'Order', 'Substitution'];
 
 export default function AuditPage() {
+  const { ready, authenticated, login } = usePrivy();
+  const { fetchWithAuth, user } = useApi();
+  const [loading, setLoading] = useState(true);
   const [selectedType, setSelectedType] = useState('All');
-  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [logEntries, setLogEntries] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!ready) return;
+
+    if (!authenticated) {
+      login();
+      return;
+    }
+
+    if (!user) return;
+
+    loadLogs();
+  }, [ready, authenticated, user, login]);
+
+  const loadLogs = async () => {
+    try {
+      // TODO: Implement audit log API endpoint
+      // For now, show empty state
+      // const response = await fetchWithAuth('/api/audit-logs');
+      // if (response.ok) {
+      //   const data = await response.json();
+      //   setLogEntries(data);
+      // }
+    } catch (error) {
+      console.error('Error loading logs:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!ready || loading) {
+    return (
+      <div className="min-h-screen bg-[#F5F5F5] flex items-center justify-center pb-20">
+        <p className="text-gray-600">Loading...</p>
+      </div>
+    );
+  }
+
+  if (!authenticated) {
+    return null;
+  }
 
   const filteredEntries = selectedType === 'All'
     ? logEntries
@@ -65,6 +74,28 @@ export default function AuditPage() {
       default: return '📝';
     }
   };
+
+  if (logEntries.length === 0) {
+    return (
+      <div className="min-h-screen bg-[#F5F5F5] pb-20">
+        <div className="max-w-md mx-auto px-4 py-6">
+          <Link href="/settings" className="text-[#EE7C2B] text-sm mb-4 inline-block">← Back to settings</Link>
+          <h1 className="text-2xl font-bold text-gray-900 mb-6">Audit Log</h1>
+          <Card className="text-center py-12">
+            <div className="text-6xl mb-4">📝</div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">No activity yet</h2>
+            <p className="text-gray-600 mb-6">
+              Your agent's actions will appear here as you use the app
+            </p>
+            <Link href="/receipts">
+              <Button variant="outline">Start by scanning a receipt</Button>
+            </Link>
+          </Card>
+        </div>
+        <Navigation />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F5F5F5] pb-20">
@@ -100,7 +131,7 @@ export default function AuditPage() {
                     <div className="text-sm font-medium text-gray-900">{entry.description}</div>
                     <span className="text-xs text-gray-500">{entry.timestamp}</span>
                   </div>
-                  {expandedId === entry.id && (
+                  {expandedId === entry.id && entry.details && (
                     <div className="mt-2 p-2 bg-gray-50 rounded text-xs text-gray-600">
                       {entry.details}
                     </div>
@@ -121,6 +152,3 @@ export default function AuditPage() {
     </div>
   );
 }
-
-
-

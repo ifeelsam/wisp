@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
       };
     }
 
-    // Create receipt with items
+    // Create receipt with items - ensure ALL items are saved
     const receipt = await prisma.receipt.create({
       data: {
         userId: user.id,
@@ -87,8 +87,8 @@ export async function POST(request: NextRequest) {
         total: receiptData.total,
         items: {
           create: receiptData.items.map(item => ({
-            name: item.name,
-            quantity: item.quantity || null,
+            name: item.name.trim(),
+            quantity: item.quantity?.trim() || null,
             price: item.price || null,
             category: item.category || null,
           })),
@@ -98,6 +98,9 @@ export async function POST(request: NextRequest) {
         items: true,
       },
     });
+
+    // Log for debugging
+    console.log(`Receipt created with ${receipt.items.length} items out of ${receiptData.items.length} parsed items`);
 
     return NextResponse.json(receipt, { status: 201 });
   } catch (error) {

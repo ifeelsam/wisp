@@ -1,18 +1,64 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePrivy } from '@privy-io/react-auth';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { Input } from '@/components/ui/Input';
 import { Navigation } from '@/components/Navigation';
-
-const members = [
-  { id: 1, name: 'You', color: '#EE7C2B', diet: ['No preference'], items: ['Oats', 'Milk'] },
-  { id: 2, name: 'Partner', color: '#799B4B', diet: ['Veg'], items: ['Yogurt', 'Bread'] },
-];
+import { useApi } from '@/lib/api';
 
 export default function ProfilePage() {
+  const { ready, authenticated, login } = usePrivy();
+  const { fetchWithAuth, user } = useApi();
+  const [loading, setLoading] = useState(true);
+  const [members, setMembers] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!ready) return;
+
+    if (!authenticated) {
+      login();
+      return;
+    }
+
+    if (!user) return;
+
+    loadProfile();
+  }, [ready, authenticated, user, login]);
+
+  const loadProfile = async () => {
+    try {
+      // TODO: Implement household members API
+      // For now, show current user as the only member
+      setMembers([{
+        id: user?.id || '1',
+        name: user?.email?.address?.split('@')[0] || 'You',
+        color: '#EE7C2B',
+        diet: [],
+        items: [],
+      }]);
+    } catch (error) {
+      console.error('Error loading profile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!ready || loading) {
+    return (
+      <div className="min-h-screen bg-[#F5F5F5] flex items-center justify-center pb-20">
+        <p className="text-gray-600">Loading...</p>
+      </div>
+    );
+  }
+
+  if (!authenticated) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-[#F5F5F5] pb-20">
       <div className="max-w-md mx-auto px-4 py-6">
@@ -30,19 +76,14 @@ export default function ProfilePage() {
                     className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
                     style={{ backgroundColor: member.color }}
                   >
-                    {member.name[0]}
+                    {member.name[0].toUpperCase()}
                   </div>
                   <div className="flex-1">
                     <div className="font-semibold text-gray-900">{member.name}</div>
-                    <div className="flex gap-1 mt-1">
-                      {member.diet.map((d) => (
-                        <Chip key={d} variant="default" className="text-xs">{d}</Chip>
-                      ))}
-                    </div>
+                    {member.email && (
+                      <div className="text-sm text-gray-500">{member.email}</div>
+                    )}
                   </div>
-                </div>
-                <div className="text-sm text-gray-600">
-                  Mostly consumes: {member.items.join(', ')}
                 </div>
               </div>
             ))}
@@ -64,24 +105,10 @@ export default function ProfilePage() {
                       {['Veg', 'Vegan', 'Lactose-free', 'Gluten-free'].map((label) => (
                         <Chip
                           key={label}
-                          variant={member.diet.includes(label) ? 'selected' : 'default'}
+                          variant={member.diet?.includes(label) ? 'selected' : 'default'}
                           className="text-xs"
                         >
                           {label}
-                        </Chip>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm text-gray-600">Mostly consumes</label>
-                    <div className="flex flex-wrap gap-2 mt-1">
-                      {['Oats', 'Milk', 'Yogurt', 'Bread', 'Bananas'].map((item) => (
-                        <Chip
-                          key={item}
-                          variant={member.items.includes(item) ? 'health' : 'default'}
-                          className="text-xs"
-                        >
-                          {item}
                         </Chip>
                       ))}
                     </div>
@@ -101,15 +128,15 @@ export default function ProfilePage() {
                 <div className="font-medium text-gray-900 mb-2">{member.name}</div>
                 <div className="space-y-1">
                   <label className="flex items-center gap-2 text-sm">
-                    <input type="checkbox" className="rounded" defaultChecked={member.id === 1} />
+                    <input type="checkbox" className="rounded" defaultChecked />
                     <span>Can approve carts</span>
                   </label>
                   <label className="flex items-center gap-2 text-sm">
-                    <input type="checkbox" className="rounded" defaultChecked={member.id === 1} />
+                    <input type="checkbox" className="rounded" defaultChecked />
                     <span>Can change budgets</span>
                   </label>
                   <label className="flex items-center gap-2 text-sm">
-                    <input type="checkbox" className="rounded" defaultChecked={member.id === 1} />
+                    <input type="checkbox" className="rounded" defaultChecked />
                     <span>Can modify health rules</span>
                   </label>
                 </div>
@@ -122,6 +149,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-
-
