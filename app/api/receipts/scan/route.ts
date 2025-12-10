@@ -9,11 +9,26 @@ async function getAuthUser(request: NextRequest) {
   const privyId = request.headers.get('x-privy-user-id');
   const email = request.headers.get('x-privy-user-email');
 
-  if (!privyId || !email) {
+  console.log('Auth headers:', { privyId, email });
+
+  if (!privyId) {
+    console.error('Missing privyId in headers');
     return null;
   }
 
-  return await getOrCreateUser(privyId, email);
+  if (!email) {
+    console.error('Missing email in headers');
+    return null;
+  }
+
+  try {
+    const user = await getOrCreateUser(privyId, email);
+    console.log('User found/created:', { id: user.id, email: user.email });
+    return user;
+  } catch (error) {
+    console.error('Error in getOrCreateUser:', error);
+    throw error;
+  }
 }
 
 export async function POST(request: NextRequest) {
